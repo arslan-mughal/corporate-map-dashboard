@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Germany Corporate Directory Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <!-- Chart.js (For Stats Dashboard) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Main Responsive Wrapper -->
+    <div id="app-container" class="app-container">
+        
+        <!-- Sidebar Backdrop Scrim -->
+        <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+
+        <!-- Collapsible Sidebar Panel -->
+        <aside id="sidebar" class="sidebar">
+            <header class="sidebar-header">
+                <div class="header-top">
+                    <div>
+                        <h1>Germany Locations</h1>
+                        <p class="subtitle">Interactive Corporate Directory</p>
+                    </div>
+                    
+                    <!-- Core Action Utilities Panel -->
+                    <div class="utility-actions">
+                        <!-- Theme Engine Switcher Toggle -->
+                        <button id="theme-toggle-btn" class="utility-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                            <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Print Document Utility -->
+                        <button id="print-map-btn" class="utility-btn" title="Print Map & Directory Dashboard" aria-label="Print Map">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                <rect x="6" y="14" width="12" height="8"></rect>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Sidebar Navigation Tabs -->
+                <div class="sidebar-tabs">
+                    <button class="tab-btn active" data-tab="directory-pane">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <circle cx="3" cy="6" r="1"></circle>
+                            <circle cx="3" cy="12" r="1"></circle>
+                            <circle cx="3" cy="18" r="1"></circle>
+                        </svg>
+                        List Directory
+                    </button>
+                    <button class="tab-btn" data-tab="stats-pane">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        Dashboard
+                    </button>
+                </div>
+            </header>
+            
+            <div class="sidebar-content">
+                
+                <!-- TAB 1: Directory List -->
+                <div id="directory-pane" class="tab-pane active">
+                    <div class="info-card">
+                        <h3>Viewport Directory</h3>
+                        <p>The index automatically filters to display only companies currently inside your map's screen bounds.</p>
+                    </div>
+                    
+                    <div class="list-section">
+                        <div class="list-section-header">
+                            <h3>Visible Index</h3>
+                            <!-- Download Visible Dataset CSV Action -->
+                            <button id="download-csv-btn" class="text-cta-btn" title="Download visible markers as CSV">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Export CSV
+                            </button>
+                        </div>
+                        <div id="companies-list" class="companies-list">
+                            <div class="loading-spinner">Loading locations...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Statistics Dashboard -->
+                <div id="stats-pane" class="tab-pane">
+                    <!-- KPI Cards Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span id="stat-total-companies" class="stat-num">0</span>
+                            <span class="stat-label">Total (Filtered)</span>
+                        </div>
+                        <div class="stat-card">
+                            <span id="stat-visible-companies" class="stat-num">0</span>
+                            <span class="stat-label">Visible (Map)</span>
+                        </div>
+                        <div class="stat-card highlight">
+                            <span id="stat-total-employees" class="stat-num">0</span>
+                            <span class="stat-label">Total Employees</span>
+                        </div>
+                        <div class="stat-card">
+                            <span id="stat-avg-employees" class="stat-num">0</span>
+                            <span class="stat-label">Avg Employees</span>
+                        </div>
+                    </div>
+
+                    <!-- Largest Employer Spotlight Banner -->
+                    <div class="spotlight-card">
+                        <div class="spotlight-icon">👑</div>
+                        <div class="spotlight-info">
+                            <span class="spotlight-label">Largest Employer (Visible)</span>
+                            <h4 id="stat-largest-employer">None</h4>
+                            <p id="stat-largest-count">0 employees</p>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container 1: Segment Distribution -->
+                    <div class="chart-box">
+                        <h3>Companies by Segment</h3>
+                        <div class="chart-canvas-holder">
+                            <canvas id="segment-pie-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart Container 2: Top 10 Largest Employers -->
+                    <div class="chart-box">
+                        <h3>Top 10 Largest Employers (Visible)</h3>
+                        <div class="chart-canvas-holder">
+                            <canvas id="top-employers-bar-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="sidebar-footer">
+                <span>Total Visible: <strong id="total-count">0</strong></span>
+            </footer>
+        </aside>
+
+        <!-- Dynamic Sidebar Floating Toggle Button -->
+        <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle Sidebar">
+            <svg class="toggle-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+
+        <!-- Map Container with Floating Overlay Panels -->
+        <main class="map-wrapper">
+            <!-- Map Base Canvas -->
+            <div id="map"></div>
+
+            <!-- Floating Top Tool Control Toolbar (Map mode selector, Locate, Fullscreen) -->
+            <div class="map-toolbar">
+                <!-- Layer Modes Selection -->
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="bubble" title="Bubble Proportional Markers">
+                        Bubble
+                    </button>
+                    <button class="mode-btn" data-mode="cluster" title="Clustered Group Markers">
+                        Cluster
+                    </button>
+                    <button class="mode-btn" data-mode="heatmap" title="Density Heatmap Layer">
+                        Heatmap
+                    </button>
+                </div>
+                
+                <div class="toolbar-divider"></div>
+                
+                <!-- GPS Locate Me Device Tool -->
+                <button id="locate-me-btn" class="toolbar-action-btn" title="Center map on my active GPS location" aria-label="Locate Me">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                    </svg>
+                </button>
+
+                <!-- Fullscreen Mode Toggle -->
+                <button id="fullscreen-toggle-btn" class="toolbar-action-btn" title="Toggle Fullscreen Mode" aria-label="Fullscreen toggle">
+                    <svg class="fullscreen-enter" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                    </svg>
+                    <svg class="fullscreen-exit" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;">
+                        <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Floating Filter Panel -->
+            <div id="filter-panel" class="filter-panel collapsed">
+                <button id="filter-toggle" class="filter-toggle">
+                    <span class="toggle-left">
+                        <svg class="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        <span>Filter Locations</span>
+                    </span>
+                    <svg class="filter-chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+
+                <div class="filter-content">
+                    <!-- Text Search -->
+                    <div class="filter-group">
+                        <label for="search-input">Search Company</label>
+                        <div class="input-with-icon">
+                            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Type name, city, notes...">
+                        </div>
+                    </div>
+
+                    <!-- Dropdowns Row -->
+                    <div class="filter-row-half">
+                        <div class="filter-group">
+                            <label for="segment-select">Segment</label>
+                            <select id="segment-select">
+                                <option value="">All Segments</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="sitetype-select">Site Type</label>
+                            <select id="sitetype-select">
+                                <option value="">All Types</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sliders for Ranges -->
+                    <div class="filter-group">
+                        <div class="slider-header">
+                            <label for="min-employees">Min Employees</label>
+                            <span id="min-emp-display" class="slider-badge">0</span>
+                        </div>
+                        <input type="range" id="min-employees" min="0" max="5000" step="50" value="0">
+                    </div>
+
+                    <div class="filter-group">
+                        <div class="slider-header">
+                            <label for="max-employees">Max Employees</label>
+                            <span id="max-emp-display" class="slider-badge">5,000+</span>
+                        </div>
+                        <input type="range" id="max-employees" min="0" max="5000" step="50" value="5000">
+                    </div>
+
+                    <!-- Reset CTA Button -->
+                    <button id="reset-filters-btn" class="reset-btn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
+                            <path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.3"></path>
+                        </svg>
+                        Clear Active Filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Interactive Collapsible Legend Map Overlay -->
+            <div id="map-legend" class="map-legend collapsed">
+                <button id="legend-toggle" class="legend-toggle">
+                    <span class="legend-toggle-text">Show Legend</span>
+                    <svg class="legend-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                
+                <div class="legend-content">
+                    <div class="legend-section">
+                        <h4>Segments</h4>
+                        <div id="legend-segments" class="legend-items-list"></div>
+                    </div>
+                    
+                    <div class="legend-section">
+                        <h4>Employees (Size)</h4>
+                        <div class="legend-sizes-list">
+                            <div class="size-item">
+                                <div class="size-circle-wrapper" style="width: 28px;">
+                                    <span class="size-circle" style="width: 12px; height: 12px;"></span>
+                                </div>
+                                <span class="size-label">&lt; 100</span>
+                            </div>
+                            <div class="size-item">
+                                <div class="size-circle-wrapper" style="width: 28px;">
+                                    <span class="size-circle" style="width: 20px; height: 20px;"></span>
+                                </div>
+                                <span class="size-label">100–300</span>
+                            </div>
+                            <div class="size-item">
+                                <div class="size-circle-wrapper" style="width: 28px;">
+                                    <span class="size-circle" style="width: 30px; height: 30px;"></span>
+                                </div>
+                                <span class="size-label">300–700</span>
+                            </div>
+                            <div class="size-item">
+                                <div class="size-circle-wrapper" style="width: 28px;">
+                                    <span class="size-circle" style="width: 42px; height: 42px;"></span>
+                                </div>
+                                <span class="size-label">700–1.5k</span>
+                            </div>
+                            <div class="size-item">
+                                <div class="size-circle-wrapper" style="width: 28px;">
+                                    <span class="size-circle" style="width: 56px; height: 56px;"></span>
+                                </div>
+                                <span class="size-label">1.5k+</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <!-- Leaflet Heatmap JS -->
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- Core Application Logic -->
+    <script src="js/app.js"></script>
+</body>
+</html>
