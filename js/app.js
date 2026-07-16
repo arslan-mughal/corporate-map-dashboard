@@ -338,7 +338,7 @@ function setupPanelTogglers() {
 async function loadData() {
     const listContainer = document.getElementById('companies-list');
     try {
-        const response = await fetch('./companies.json');
+        const response = await fetch('./companies.json?t=${new Date().getTime()}`);
         if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
         
         state.companies = await response.json();
