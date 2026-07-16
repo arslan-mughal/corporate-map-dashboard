@@ -482,19 +482,6 @@
         "longitude": 11.655265
     },
     {
-        "company": "Rheinmetall AG",
-        "website": "rheinmetall.com",
-        "address": "Rheinmetall Platz 1, 40476 Duesseldorf",
-        "segment": "Land systems, ammunition, air defense",
-        "siteType": "HQ",
-        "employees": "0",
-        "phone": "+49 (0)211 473-01",
-        "email": "info@rheinmetall.com",
-        "notes": "Corporate HQ; DAX company",
-        "latitude": 51.253446,
-        "longitude": 6.784842
-    },
-    {
         "company": "Tesat-Spacecom GmbH & Co. KG",
         "website": "tesat.com",
         "address": "Gerberstrasse 49, 71522 Backnang",
@@ -506,19 +493,6 @@
         "notes": "Airbus subsidiary; laser comm terminals",
         "latitude": 48.944954,
         "longitude": 9.426566
-    },
-    {
-        "company": "Leonardo Germany GmbH",
-        "website": "leonardo.com",
-        "address": "Raiffeisenstrasse 10, 41470 Neuss",
-        "segment": "Helicopters, naval electronics",
-        "siteType": "Office",
-        "employees": "130-170",
-        "phone": "+49 (0)2137 782-0",
-        "email": "info@leonardogermany.com",
-        "notes": "Also ~23% shareholder in Hensoldt; verify exact street address",
-        "latitude": 51.131223,
-        "longitude": 6.73559
     },
     {
         "company": "OHB System AG",
@@ -547,64 +521,12 @@
         "longitude": 9.480776
     },
     {
-        "company": "Saab Deutschland GmbH",
-        "website": "saab.com",
-        "address": "Charlottenstraße 59, 10117 Berlin",
-        "segment": "Radar, Eurofighter EW, Gripen support",
-        "siteType": "Office",
-        "employees": "180-250",
-        "phone": "+49 30 40 89 96 60-0",
-        "email": "saab.deutschland@saabgroup.com",
-        "notes": "Partners with Helsing on Eurofighter EW upgrades",
-        "latitude": 52.512454,
-        "longitude": 13.391199
-    },
-    {
-        "company": "ArianeGroup GmbH",
-        "website": "ariane.group",
-        "address": "Robert-Koch-Strasse 1, 82024 Taufkirchen (+ Lampoldshausen, Bremen)",
-        "segment": "Rocket propulsion",
-        "siteType": "HQ/Factory",
-        "employees": "200-300",
-        "phone": "+49 (0)89 60 000",
-        "email": "info@ariane.group",
-        "notes": "50/50 Airbus-Safran JV; Ariane rocket engines",
-        "latitude": 48.052727,
-        "longitude": 11.651563
-    },
-    {
-        "company": "Safran Electronics & Defense Germany GmbH",
-        "website": "safran-group.com",
-        "address": "Gottlieb-Daimler-Strasse 60, 71711 Murr",
-        "segment": "Inertial navigation, PNT systems",
-        "siteType": "HQ",
-        "employees": "200-300",
-        "phone": "+49 7144 81140",
-        "email": "sedd.info@safrangroup.com",
-        "notes": "4,000+ fiber-optic gyros/year produced in Germany",
-        "latitude": 48.956309,
-        "longitude": 9.239882
-    },
-    {
-        "company": "Elbit Systems Deutschland GmbH & Co. KG",
-        "website": "elbitsystems.com",
-        "address": "Eberhard-Finckh-Strasse 55, 89075 Ulm",
-        "segment": "Training simulators, EW",
-        "siteType": "HQ/Office",
-        "employees": "200-300",
-        "phone": "+49 (0) 731 1553 0",
-        "email": "presse@elbitsystems-de.com",
-        "notes": "Israeli-owned German subsidiary",
-        "latitude": 48.426184,
-        "longitude": 10.009002
-    },
-    {
         "company": "Collins Aerospace (RTX) - Noerdlingen",
         "website": "rtx.com",
         "address": "86720 Nördlingen",
         "segment": "Aerospace power distribution",
         "siteType": "Factory",
-        "employees": "300-500",
+        "employees": "500",
         "phone": "+49-9081 898 0",
         "email": null,
         "notes": "Power systems for Boeing 787/Airbus A350/A220; verify exact street address",
@@ -612,38 +534,12 @@
         "longitude": 10.499217
     },
     {
-        "company": "Damen Naval Germany GmbH",
-        "website": "damennaval.com",
-        "address": "Heidenkampsweg 58, 20097 Hamburg",
-        "segment": "Naval shipbuilding (frigates)",
-        "siteType": "Office/Shipyard",
-        "employees": "30-35",
-        "phone": "+49 172 462 17 16",
-        "email": "services.germany@damen.com",
-        "notes": "MKS 180 frigate program lead",
-        "latitude": 53.548114,
-        "longitude": 10.027843
-    },
-    {
-        "company": "Telespazio Germany GmbH",
-        "website": "telespazio.de",
-        "address": "Friedrichshafener Strasse 3, 82205 Gilching (+ Darmstadt HQ)",
-        "segment": "Satellite ops, C4I software",
-        "siteType": "Office",
-        "employees": "400-420",
-        "phone": "+49 (0)6151–8257-0",
-        "email": "info@telespazio.de",
-        "notes": "Leonardo/Thales space JV",
-        "latitude": 48.091232,
-        "longitude": 11.281408
-    },
-    {
         "company": "Rockwell Collins Deutschland GmbH (RTX/Collins Aerospace)",
         "website": "rtx.com",
         "address": "Grenzhoeferweg 36, 69123 Heidelberg",
         "segment": "Fighter jet avionics",
         "siteType": "Factory",
-        "employees": "460-500",
+        "employees": "500",
         "phone": "+49 6221 512 0",
         "email": null,
         "notes": "Avionics for fighter jets, ground vehicle computers",
@@ -689,17 +585,5 @@
         "latitude": 48.815483,
         "longitude": 9.061204
     },
-    {
-        "company": "Frequentis Deutschland GmbH",
-        "website": "frequentis.com",
-        "address": "Graurheindorfer Strasse 159, 53117 Bonn",
-        "segment": "Air traffic/defense communications",
-        "siteType": "Office",
-        "employees": "80-150",
-        "phone": "+49 6102 3699210",
-        "email": "info@frequentis.de",
-        "notes": "ATC & mission-critical comms",
-        "latitude": 50.75227,
-        "longitude": 7.089141
-    }
+
 ]
