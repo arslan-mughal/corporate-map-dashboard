@@ -539,7 +539,7 @@
         "address": "Grenzhoeferweg 36, 69123 Heidelberg",
         "segment": "Fighter jet avionics",
         "siteType": "Factory",
-        "employees": "500",
+        "employees": "460-500",
         "phone": "+49 6221 512 0",
         "email": null,
         "notes": "Avionics for fighter jets, ground vehicle computers",
@@ -585,5 +585,4 @@
         "latitude": 48.815483,
         "longitude": 9.061204
     },
-
 ]
