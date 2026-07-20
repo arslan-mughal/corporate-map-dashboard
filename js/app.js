@@ -1,7 +1,6 @@
-// write or paste code here
-
 /**
  * Germany Company Locations Map - Controller & Visualizer Engine
+ * Layout: Company, Website, Street Address (Germany), Zip Code, City, Phone, Email, Workers, Longitude, Latitude
  */
 
 const state = {
@@ -10,7 +9,6 @@ const state = {
     map: null,
     activeMarker: null,    // Selected circle marker
     locateMarker: null,    // User GPS locator indicator instance
-    segmentColors: {},     // Unique Segment color tracking map
     
     // Dynamic Mode Sub-layers
     layers: {
@@ -20,7 +18,6 @@ const state = {
     },
     
     charts: {
-        segmentPie: null,
         topEmployersBar: null
     },
 
@@ -34,45 +31,29 @@ const state = {
         zoom: 6,
         filters: {
             search: '',
-            segment: '',
-            siteType: '',
-            minEmployees: 0,
-            maxEmployees: 5000
+            city: '',
+            zipCode: '',
+            minWorkers: 0,
+            maxWorkers: 5000
         }
     },
     
     limits: {
-        maxEmployees: 5000
+        maxWorkers: 5000
     }
 };
 
-const COLOR_PALETTE = [
-    '#2563eb', '#16a34a', '#ea580c', '#9333ea', 
-    '#db2777', '#ca8a04', '#0891b2', '#dc2626'
-];
-let paletteColorIndex = 0;
-
 /**
- * Assigns segment colors dynamically.
+ * Calculates circle marker radii dynamically extracting minimum numbers out of ranges
  */
-function getSegmentColor(segment) {
-    const rawSegment = (segment || 'Other').trim();
-    const formattedSegment = rawSegment.charAt(0).toUpperCase() + rawSegment.slice(1).toLowerCase();
-    
-    if (!state.segmentColors[formattedSegment]) {
-        state.segmentColors[formattedSegment] = COLOR_PALETTE[paletteColorIndex % COLOR_PALETTE.length];
-        paletteColorIndex++;
-    }
-    return state.segmentColors[formattedSegment];
-}
+function getRadius(workerString) {
+    const cleanMatch = String(workerString).match(/^(\d+)/);
+    const count = cleanMatch ? parseInt(cleanMatch[1], 10) : 0;
 
-function getRadius(employees) {
-    // This handles both numbers and strings like "80-150" by parsing the first integer
-    const count = parseInt(employees) || 0;
-    if (count < 100) return 6;
-    if (count >= 100 && count < 300) return 10;
-    if (count >= 300 && count < 700) return 15;
-    if (count >= 700 && count < 1500) return 21;
+    if (count < 50) return 6;
+    if (count < 150) return 10;
+    if (count < 500) return 15;
+    if (count < 1000) return 21;
     return 28;
 }
 
@@ -174,7 +155,6 @@ function setupPanelTogglers() {
     const fullscreenBtn = document.getElementById('fullscreen-toggle-btn');
     const downloadCsvBtn = document.getElementById('download-csv-btn');
 
-    // Restore sidebar layout state
     if (state.prefs.sidebarCollapsed || window.innerWidth <= 768) {
         sidebar.classList.add('collapsed');
     } else {
@@ -202,7 +182,6 @@ function setupPanelTogglers() {
         savePreferences();
     });
 
-    // Active preferences tab layout restores
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -228,21 +207,18 @@ function setupPanelTogglers() {
 
             if (targetPaneId === 'stats-pane') {
                 setTimeout(() => {
-                    if (state.charts.segmentPie) state.charts.segmentPie.resize();
                     if (state.charts.topEmployersBar) state.charts.topEmployersBar.resize();
                 }, 50);
             }
         });
     });
 
-    // Theme Engine trigger toggle hooks
     themeBtn.addEventListener('click', () => {
         state.prefs.theme = (state.prefs.theme === 'light') ? 'dark' : 'light';
         applyThemeClass();
         savePreferences();
     });
 
-    // Locate Me GPS Tracking Tool
     locateBtn.addEventListener('click', () => {
         if (!navigator.geolocation) {
             alert("Geolocation tracking features are unsupported by this browser.");
@@ -254,7 +230,6 @@ function setupPanelTogglers() {
             (pos) => {
                 const lat = pos.coords.latitude;
                 const lng = pos.coords.longitude;
-                const accuracy = pos.coords.accuracy;
 
                 if (state.locateMarker) {
                     state.locateMarker.setLatLng([lat, lng]);
@@ -278,7 +253,6 @@ function setupPanelTogglers() {
         );
     });
 
-    // Fullscreen Layout Controls
     fullscreenBtn.addEventListener('click', () => {
         const container = document.getElementById('app-container');
         if (!document.fullscreenElement) {
@@ -290,12 +264,10 @@ function setupPanelTogglers() {
         }
     });
 
-    // Handle print layouts
     printBtn.addEventListener('click', () => {
         window.print();
     });
 
-    // Map visualization Modes Selector
     const modeBtns = document.querySelectorAll('.mode-btn');
     modeBtns.forEach(btn => {
         const modeValue = btn.getAttribute('data-mode');
@@ -314,103 +286,101 @@ function setupPanelTogglers() {
         });
     });
 
-    // Export Dynamic Visible CSV Click
     downloadCsvBtn.addEventListener('click', downloadVisibleCSV);
 
-    // Collapsible Filters Panel
     const filters = document.getElementById('filter-panel');
     const filterToggle = document.getElementById('filter-toggle');
-    filterToggle.addEventListener('click', () => {
-        filters.classList.toggle('collapsed');
-    });
-
-    // Collapsible Legend Panel
-    const legend = document.getElementById('map-legend');
-    const legendToggle = document.getElementById('legend-toggle');
-    legendToggle.addEventListener('click', () => {
-        legend.classList.toggle('collapsed');
-    });
-}
-
-/**
- * Loads directory data and initializes view states
- */
-async function loadData() {
-    const listContainer = document.getElementById('companies-list');
-    try {
-        const response = await fetch('./companies.json');
-        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-        
-        state.companies = await response.json();
-        
-        // Dynamic analysis of dataset properties boundaries
-        initializeFilterBounds();
-        populateFilterDropdowns();
-        restoreSavedFilterStates();
-        bindFilterControls();
-
-        // Perform layout paint
-        applyFilters();
-        updateLegendUI();
-        
-    } catch (error) {
-        console.error("Critical error building system variables:", error);
-        listContainer.innerHTML = `
-            <div class="loading-spinner" style="color: #dc2626;">
-                Failed to load directory. Check network paths.
-            </div>
-        `;
+    if (filterToggle && filters) {
+        filterToggle.addEventListener('click', () => {
+            filters.classList.toggle('collapsed');
+        });
     }
 }
 
 /**
- * Sets slider thresholds based on maximum employee size
+ * Loads dataset records from the local workspace with runtime cache busting
  */
-function initializeFilterBounds() {
-    let maxEmployeesVal = 1000;
-    state.companies.forEach(company => {
-        const count = parseInt(company.employees) || 0;
-        if (count > maxEmployeesVal) maxEmployeesVal = count;
-    });
+async function loadData() {
+    const listContainer = document.getElementById('companies-list');
+    try {
+        const cacheBuster = `?t=${new Date().getTime()}`;
+        const response = await fetch(`companies.json${cacheBuster}`);
+        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+        
+        state.companies = await response.json();
+        
+        initializeFilterBounds();
+        populateGeographicDropdowns();
+        restoreSavedFilterStates();
+        bindFilterControls();
 
-    state.limits.maxEmployees = maxEmployeesVal;
-    
-    const minSlider = document.getElementById('min-employees');
-    const maxSlider = document.getElementById('max-employees');
-    
-    minSlider.max = maxEmployeesVal;
-    maxSlider.max = maxEmployeesVal;
-    
-    state.prefs.filters.maxEmployees = Math.min(state.prefs.filters.maxEmployees, maxEmployeesVal);
+        applyFilters();
+        
+    } catch (error) {
+        console.error("Critical error building system variables:", error);
+        if (listContainer) {
+            listContainer.innerHTML = `
+                <div class="loading-spinner" style="color: #dc2626;">
+                    Failed to load directory. Check network paths.
+                </div>
+            `;
+        }
+    }
 }
 
 /**
- * Builds selection parameters for Segment and Site Type filters
+ * Sets slider thresholds based on maximum worker sizes inside array objects
  */
-function populateFilterDropdowns() {
-    const segmentSelect = document.getElementById('segment-select');
-    const siteTypeSelect = document.getElementById('sitetype-select');
+function initializeFilterBounds() {
+    let maxWorkersVal = 1000;
+    state.companies.forEach(company => {
+        const cleanMatch = String(company.workers).match(/^(\d+)/);
+        const count = cleanMatch ? parseInt(cleanMatch[1], 10) : 0;
+        if (count > maxWorkersVal) maxWorkersVal = count;
+    });
 
-    const uniqueSegments = new Set();
-    const uniqueSiteTypes = new Set();
+    state.limits.maxWorkers = maxWorkersVal;
+    
+    const minSlider = document.getElementById('min-workers') || document.getElementById('min-employees');
+    const maxSlider = document.getElementById('max-workers') || document.getElementById('max-employees');
+    
+    if (minSlider) minSlider.max = maxWorkersVal;
+    if (maxSlider) maxSlider.max = maxWorkersVal;
+    
+    state.prefs.filters.maxWorkers = Math.min(state.prefs.filters.maxWorkers || 5000, maxWorkersVal);
+}
+
+/**
+ * Populates Selection Parameter Dropdowns for City and Zip Code
+ */
+function populateGeographicDropdowns() {
+    const citySelect = document.getElementById('city-select');
+    const zipSelect = document.getElementById('zip-select');
+
+    if (!citySelect || !zipSelect) return;
+
+    const uniqueCities = new Set();
+    const uniqueZips = new Set();
 
     state.companies.forEach(c => {
-        if (c.segment) uniqueSegments.add(c.segment.trim());
-        if (c.siteType) uniqueSiteTypes.add(c.siteType.trim());
+        if (c.city) uniqueCities.add(c.city.trim());
+        if (c.zipCode) uniqueZips.add(String(c.zipCode).trim());
     });
 
-    Array.from(uniqueSegments).sort().forEach(seg => {
+    // Populate City Options
+    Array.from(uniqueCities).sort().forEach(city => {
         const option = document.createElement('option');
-        option.value = seg;
-        option.textContent = seg;
-        segmentSelect.appendChild(option);
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
     });
 
-    Array.from(uniqueSiteTypes).sort().forEach(type => {
+    // Populate Zip Code Options
+    Array.from(uniqueZips).sort().forEach(zip => {
         const option = document.createElement('option');
-        option.value = type;
-        option.textContent = type;
-        siteTypeSelect.appendChild(option);
+        option.value = zip;
+        option.textContent = zip;
+        zipSelect.appendChild(option);
     });
 }
 
@@ -420,22 +390,33 @@ function populateFilterDropdowns() {
 function restoreSavedFilterStates() {
     const f = state.prefs.filters;
     
-    document.getElementById('search-input').value = f.search;
-    document.getElementById('segment-select').value = f.segment;
-    document.getElementById('sitetype-select').value = f.siteType;
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = f.search || '';
+
+    const citySelect = document.getElementById('city-select');
+    if (citySelect) citySelect.value = f.city || '';
+
+    const zipSelect = document.getElementById('zip-select');
+    if (zipSelect) zipSelect.value = f.zipCode || '';
     
-    const minSlider = document.getElementById('min-employees');
-    const maxSlider = document.getElementById('max-employees');
+    const minSlider = document.getElementById('min-workers') || document.getElementById('min-employees');
+    const maxSlider = document.getElementById('max-workers') || document.getElementById('max-employees');
     
-    minSlider.value = f.minEmployees;
-    maxSlider.value = f.maxEmployees;
+    const minDisplay = document.getElementById('min-work-display') || document.getElementById('min-emp-display');
+    const maxDisplay = document.getElementById('max-work-display') || document.getElementById('max-emp-display');
+
+    if (minSlider) minSlider.value = f.minWorkers || 0;
+    if (maxSlider) maxSlider.value = f.maxWorkers || state.limits.maxWorkers;
     
-    document.getElementById('min-emp-display').textContent = f.minEmployees.toLocaleString();
+    if (minDisplay) minDisplay.textContent = (f.minWorkers || 0).toLocaleString();
     
-    if (f.maxEmployees === state.limits.maxEmployees) {
-        document.getElementById('max-emp-display').textContent = f.maxEmployees.toLocaleString() + "+";
-    } else {
-        document.getElementById('max-emp-display').textContent = f.maxEmployees.toLocaleString();
+    if (maxDisplay) {
+        const currentMax = f.maxWorkers || state.limits.maxWorkers;
+        if (currentMax === state.limits.maxWorkers) {
+            maxDisplay.textContent = currentMax.toLocaleString() + "+";
+        } else {
+            maxDisplay.textContent = currentMax.toLocaleString();
+        }
     }
 }
 
@@ -444,74 +425,92 @@ function restoreSavedFilterStates() {
  */
 function bindFilterControls() {
     const searchInput = document.getElementById('search-input');
-    const segmentSelect = document.getElementById('segment-select');
-    const siteTypeSelect = document.getElementById('sitetype-select');
-    const minSlider = document.getElementById('min-employees');
-    const maxSlider = document.getElementById('max-employees');
+    const citySelect = document.getElementById('city-select');
+    const zipSelect = document.getElementById('zip-select');
+    const minSlider = document.getElementById('min-workers') || document.getElementById('min-employees');
+    const maxSlider = document.getElementById('max-workers') || document.getElementById('max-employees');
     const resetBtn = document.getElementById('reset-filters-btn');
+
+    const minDisplay = document.getElementById('min-work-display') || document.getElementById('min-emp-display');
+    const maxDisplay = document.getElementById('max-work-display') || document.getElementById('max-emp-display');
 
     const triggerFilterUpdate = () => {
         savePreferences();
         applyFilters();
     };
 
-    searchInput.addEventListener('input', (e) => {
-        state.prefs.filters.search = e.target.value;
-        triggerFilterUpdate();
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            state.prefs.filters.search = e.target.value;
+            triggerFilterUpdate();
+        });
+    }
 
-    segmentSelect.addEventListener('change', (e) => {
-        state.prefs.filters.segment = e.target.value;
-        triggerFilterUpdate();
-    });
+    if (citySelect) {
+        citySelect.addEventListener('change', (e) => {
+            state.prefs.filters.city = e.target.value;
+            triggerFilterUpdate();
+        });
+    }
 
-    siteTypeSelect.addEventListener('change', (e) => {
-        state.prefs.filters.siteType = e.target.value;
-        triggerFilterUpdate();
-    });
+    if (zipSelect) {
+        zipSelect.addEventListener('change', (e) => {
+            state.prefs.filters.zipCode = e.target.value;
+            triggerFilterUpdate();
+        });
+    }
 
-    minSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value);
-        state.prefs.filters.minEmployees = value;
-        document.getElementById('min-emp-display').textContent = value.toLocaleString();
-        
-        if (value > parseInt(maxSlider.value)) {
-            maxSlider.value = value;
-            state.prefs.filters.maxEmployees = value;
-            document.getElementById('max-emp-display').textContent = value.toLocaleString();
-        }
-        triggerFilterUpdate();
-    });
+    if (minSlider) {
+        minSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value, 10);
+            state.prefs.filters.minWorkers = value;
+            if (minDisplay) minDisplay.textContent = value.toLocaleString();
+            
+            if (maxSlider && value > parseInt(maxSlider.value, 10)) {
+                maxSlider.value = value;
+                state.prefs.filters.maxWorkers = value;
+                if (maxDisplay) maxDisplay.textContent = value.toLocaleString();
+            }
+            triggerFilterUpdate();
+        });
+    }
 
-    maxSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value);
-        state.prefs.filters.maxEmployees = value;
-        
-        if (value === state.limits.maxEmployees) {
-            document.getElementById('max-emp-display').textContent = value.toLocaleString() + "+";
-        } else {
-            document.getElementById('max-emp-display').textContent = value.toLocaleString();
-        }
+    if (maxSlider) {
+        maxSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value, 10);
+            state.prefs.filters.maxWorkers = value;
+            
+            if (maxDisplay) {
+                if (value === state.limits.maxWorkers) {
+                    maxDisplay.textContent = value.toLocaleString() + "+";
+                } else {
+                    maxDisplay.textContent = value.toLocaleString();
+                }
+            }
 
-        if (value < parseInt(minSlider.value)) {
-            minSlider.value = value;
-            state.prefs.filters.minEmployees = value;
-            document.getElementById('min-emp-display').textContent = value.toLocaleString();
-        }
-        triggerFilterUpdate();
-    });
+            if (minSlider && value < parseInt(minSlider.value, 10)) {
+                minSlider.value = value;
+                state.prefs.filters.minWorkers = value;
+                if (minDisplay) minDisplay.textContent = value.toLocaleString();
+            }
+            triggerFilterUpdate();
+        });
+    }
 
-    resetBtn.addEventListener('click', () => {
-        state.prefs.filters = {
-            search: '',
-            segment: '',
-            siteType: '',
-            minEmployees: 0,
-            maxEmployees: state.limits.maxEmployees
-        };
-        restoreSavedFilterStates();
-        triggerFilterUpdate();
-    });
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            localStorage.clear(); // Clear cached bounds to resolve slider lockups
+            state.prefs.filters = {
+                search: '',
+                city: '',
+                zipCode: '',
+                minWorkers: 0,
+                maxWorkers: state.limits.maxWorkers
+            };
+            restoreSavedFilterStates();
+            triggerFilterUpdate();
+        });
+    }
 }
 
 /**
@@ -519,24 +518,29 @@ function bindFilterControls() {
  */
 function applyFilters() {
     const f = state.prefs.filters;
-    const query = f.search.toLowerCase().trim();
+    const query = (f.search || '').toLowerCase().trim();
 
     state.filteredCompanies = state.companies.filter(company => {
+        // Text Match Fields
         const matchesSearch = !query || 
             (company.company && company.company.toLowerCase().includes(query)) ||
-            (company.address && company.address.toLowerCase().includes(query)) ||
-            (company.notes && company.notes.toLowerCase().includes(query));
+            (company.address && company.address.toLowerCase().includes(query));
 
-        const matchesSegment = !f.segment || company.segment === f.segment;
-        const matchesSiteType = !f.siteType || company.siteType === f.siteType;
+        // Geographic Dropdown Filtering Match
+        const matchesCity = !f.city || company.city === f.city;
+        const matchesZip = !f.zipCode || String(company.zipCode) === f.zipCode;
 
-        const empCount = parseInt(company.employees) || 0;
-        const matchesEmployees = empCount >= f.minEmployees && empCount <= f.maxEmployees;
+        // Worker Extraction Calculation Ranges Match
+        const cleanMatch = String(company.workers).match(/^(\d+)/);
+        const count = cleanMatch ? parseInt(cleanMatch[1], 10) : 0;
+        
+        const targetMin = f.minWorkers !== undefined ? f.minWorkers : 0;
+        const targetMax = f.maxWorkers !== undefined ? f.maxWorkers : state.limits.maxWorkers;
+        const matchesWorkers = count >= targetMin && count <= targetMax;
 
-        return matchesSearch && matchesSegment && matchesSiteType && matchesEmployees;
+        return matchesSearch && matchesCity && matchesZip && matchesWorkers;
     });
 
-    // Clear background coordinate arrays
     state.layers.bubble.clearLayers();
     state.layers.cluster.clearLayers();
     
@@ -545,8 +549,8 @@ function applyFilters() {
     state.filteredCompanies.forEach(company => {
         if (!company.latitude || !company.longitude) return;
 
-        const markerColor = getSegmentColor(company.segment);
-        const markerRadius = getRadius(company.employees);
+        const markerColor = '#2563eb'; 
+        const markerRadius = getRadius(company.workers);
 
         // 1. Proportional Circle Markers
         const bubbleMarker = L.circleMarker([company.latitude, company.longitude], {
@@ -573,13 +577,13 @@ function applyFilters() {
         state.layers.cluster.addLayer(clusterMarker);
 
         // 3. Heatmap Data Array
-        const empWeight = Math.min(1.0, (parseInt(company.employees) || 1) / 1000);
-        heatData.push([company.latitude, company.longitude, empWeight]);
+        const cleanMatch = String(company.workers).match(/^(\d+)/);
+        const count = cleanMatch ? parseInt(cleanMatch[1], 10) : 1;
+        const workerWeight = Math.min(1.0, count / 1000);
+        heatData.push([company.latitude, company.longitude, workerWeight]);
     });
 
     state.layers.heatmap.setLatLngs(heatData);
-
-    // Apply active visualization layers
     applyLayerMode();
 }
 
@@ -589,7 +593,6 @@ function applyFilters() {
 function applyLayerMode() {
     const activeMode = state.prefs.mode;
     
-    // Remove layers safely
     state.map.removeLayer(state.layers.bubble);
     state.map.removeLayer(state.layers.cluster);
     state.map.removeLayer(state.layers.heatmap);
@@ -621,7 +624,8 @@ function updateVisibleCompaniesList() {
     renderDirectoryList(visibleCompanies);
     updateDashboardUI(visibleCompanies);
     
-    document.getElementById('total-count').textContent = visibleCompanies.length;
+    const totalCountEl = document.getElementById('total-count') || document.getElementById('total-count-display');
+    if (totalCountEl) totalCountEl.textContent = visibleCompanies.length;
 }
 
 /**
@@ -629,6 +633,8 @@ function updateVisibleCompaniesList() {
  */
 function renderDirectoryList(companies) {
     const listContainer = document.getElementById('companies-list');
+    if (!listContainer) return;
+    
     listContainer.innerHTML = '';
 
     if (companies.length === 0) {
@@ -641,11 +647,14 @@ function renderDirectoryList(companies) {
         card.className = 'company-card';
         card.setAttribute('data-id', company.company);
         
+        const cleanMatch = String(company.workers).match(/^(\d+)/);
+        const count = cleanMatch ? parseInt(cleanMatch[1], 10) : 0;
+        
         card.innerHTML = `
-            <h4>${company.company}</h4>
+            <h4>${company.company || 'Unknown Corporation'}</h4>
             <div class="meta-line">
-                <span>${company.segment || 'Other'}</span>
-                <span>${company.employees ? parseInt(company.employees).toLocaleString() : '0'} Employees</span>
+                <span>${company.city || 'No Location Data'}</span>
+                <span>${count > 0 ? count.toLocaleString() : company.workers || '0'} Workers</span>
             </div>
         `;
         
@@ -664,119 +673,70 @@ function updateDashboardUI(visibleCompanies) {
     const totalFiltered = state.filteredCompanies.length;
     const totalVisibleCount = visibleCompanies.length;
     
-    let totalEmployees = 0;
+    let totalWorkers = 0;
     let largestEmployer = null;
-    let maxEmployees = -1;
+    let maxWorkers = -1;
 
     visibleCompanies.forEach(c => {
-        const count = parseInt(c.employees) || 0;
-        totalEmployees += count;
+        const cleanMatch = String(c.workers).match(/^(\d+)/);
+        const count = cleanMatch ? parseInt(cleanMatch[1], 10) : 0;
+        totalWorkers += count;
         
-        if (count > maxEmployees) {
-            maxEmployees = count;
+        if (count > maxWorkers) {
+            maxWorkers = count;
             largestEmployer = c;
         }
     });
 
-    const avgEmployees = totalVisibleCount > 0 ? (totalEmployees / totalVisibleCount) : 0;
+    const avgWorkers = totalVisibleCount > 0 ? (totalWorkers / totalVisibleCount) : 0;
 
-    // Display numbers inside DOM placeholders
-    document.getElementById('stat-total-companies').textContent = totalFiltered.toLocaleString();
-    document.getElementById('stat-visible-companies').textContent = totalVisibleCount.toLocaleString();
-    document.getElementById('stat-total-employees').textContent = totalEmployees.toLocaleString();
-    document.getElementById('stat-avg-employees').textContent = Math.round(avgEmployees).toLocaleString();
+    const totalCompEl = document.getElementById('stat-total-companies');
+    const visCompEl = document.getElementById('stat-visible-companies');
+    const totalEmpEl = document.getElementById('stat-total-employees') || document.getElementById('stat-total-workers');
+    const avgEmpEl = document.getElementById('stat-avg-employees') || document.getElementById('stat-avg-workers');
 
-    // Configure largest employer spotlight
+    if (totalCompEl) totalCompEl.textContent = totalFiltered.toLocaleString();
+    if (visCompEl) visCompEl.textContent = totalVisibleCount.toLocaleString();
+    if (totalEmpEl) totalEmpEl.textContent = totalWorkers.toLocaleString();
+    if (avgEmpEl) avgEmpEl.textContent = Math.round(avgWorkers).toLocaleString();
+
     const spotlightTitle = document.getElementById('stat-largest-employer');
     const spotlightCount = document.getElementById('stat-largest-count');
 
     if (largestEmployer) {
-        spotlightTitle.textContent = largestEmployer.company;
-        spotlightCount.textContent = `${maxEmployees.toLocaleString()} employees (${largestEmployer.segment || 'Other'})`;
+        if (spotlightTitle) spotlightTitle.textContent = largestEmployer.company;
+        if (spotlightCount) spotlightCount.textContent = `${maxWorkers.toLocaleString()} workers (${largestEmployer.city || 'Unknown City'})`;
     } else {
-        spotlightTitle.textContent = "None Visible";
-        spotlightCount.textContent = "0 employees";
+        if (spotlightTitle) spotlightTitle.textContent = "None Visible";
+        if (spotlightCount) spotlightCount.textContent = "0 workers";
     }
 
-    // Pie visualization data compilation
-    const segmentsMap = {};
-    visibleCompanies.forEach(c => {
-        const segmentName = (c.segment || 'Other').trim();
-        segmentsMap[segmentName] = (segmentsMap[segmentName] || 0) + 1;
-    });
-
-    const pieLabels = Object.keys(segmentsMap);
-    const pieData = Object.values(segmentsMap);
-    const pieColors = pieLabels.map(seg => getSegmentColor(seg));
-
-    renderSegmentPieChart(pieLabels, pieData, pieColors);
-
-    // Dynamic horizontal bar data compilation (Top 10 Largest Employers)
     const topEmployers = [...visibleCompanies]
-        .filter(c => parseInt(c.employees) > 0)
-        .sort((a, b) => (parseInt(b.employees) || 0) - (parseInt(a.employees) || 0))
+        .sort((a, b) => {
+            const aMatch = String(a.workers).match(/^(\d+)/);
+            const bMatch = String(b.workers).match(/^(\d+)/);
+            return (bMatch ? parseInt(bMatch[1], 10) : 0) - (aMatch ? parseInt(aMatch[1], 10) : 0);
+        })
         .slice(0, 10);
 
-    const barLabels = topEmployers.map(c => c.company);
-    const barData = topEmployers.map(c => parseInt(c.employees) || 0);
-    const barColors = topEmployers.map(c => getSegmentColor(c.segment));
+    const barLabels = topEmployers.map(c => c.company || 'Unknown');
+    const barData = topEmployers.map(c => {
+        const m = String(c.workers).match(/^(\d+)/);
+        return m ? parseInt(m[1], 10) : 0;
+    });
+    const barColors = topEmployers.map(() => '#2563eb');
 
     renderTopEmployersBarChart(barLabels, barData, barColors);
-}
-
-/**
- * Handles rendering / updating the Doughnut Segment Chart safely
- */
-function renderSegmentPieChart(labels, data, colors) {
-    const ctx = document.getElementById('segment-pie-chart').getContext('2d');
-
-    if (labels.length === 0) {
-        labels = ["No data in viewport"];
-        data = [1];
-        colors = ["#e2e8f0"];
-    }
-
-    if (state.charts.segmentPie) {
-        state.charts.segmentPie.data.labels = labels;
-        state.charts.segmentPie.data.datasets[0].data = data;
-        state.charts.segmentPie.data.datasets[0].backgroundColor = colors;
-        state.charts.segmentPie.update();
-    } else {
-        state.charts.segmentPie = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: colors,
-                    borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 8,
-                            padding: 8,
-                            font: { size: 9, family: 'inherit' }
-                        }
-                    }
-                }
-            }
-        });
-    }
 }
 
 /**
  * Handles rendering / updating the Top 10 Horizontal Bar Chart safely
  */
 function renderTopEmployersBarChart(labels, data, colors) {
-    const ctx = document.getElementById('top-employers-bar-chart').getContext('2d');
+    const chartEl = document.getElementById('top-employers-bar-chart');
+    if (!chartEl) return;
+    
+    const ctx = chartEl.getContext('2d');
 
     if (labels.length === 0) {
         labels = ["No visible data"];
@@ -789,13 +749,13 @@ function renderTopEmployersBarChart(labels, data, colors) {
         state.charts.topEmployersBar.data.datasets[0].data = data;
         state.charts.topEmployersBar.data.datasets[0].backgroundColor = colors;
         state.charts.topEmployersBar.update();
-    } else {
+    } else if (typeof Chart !== 'undefined') {
         state.charts.topEmployersBar = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Employees',
+                    label: 'Workers',
                     data: data,
                     backgroundColor: colors,
                     borderRadius: 3
@@ -820,43 +780,26 @@ function renderTopEmployersBarChart(labels, data, colors) {
  */
 function bindPopupToMarker(marker, company) {
     const name = company.company || 'Unknown Corporation';
-    const address = company.address || 'No register details';
-    const segment = company.segment ? `<span class="tag-badge segment-tag">${company.segment}</span>` : '';
-    const siteType = company.siteType ? `<span class="tag-badge sitetype-tag">${company.siteType}</span>` : '';
-    
-    const employees = company.employees ? parseInt(company.employees).toLocaleString() : '0';
+    const address = company.address ? `${company.address}, ${company.zipCode || ''} ${company.city || ''}`.trim() : 'No address details';
+    const workers = company.workers || '0';
 
     const phoneRow = company.phone ? `<div class="popup-row"><span class="popup-label">Phone:</span><span class="popup-value"><a href="tel:${company.phone}" class="popup-link">${company.phone}</a></span></div>` : '';
     const emailRow = company.email ? `<div class="popup-row"><span class="popup-label">Email:</span><span class="popup-value"><a href="mailto:${company.email}" class="popup-link">${company.email}</a></span></div>` : '';
-    const notesBlock = company.notes ? `<div class="popup-notes"><strong>Internal Notes:</strong> "${company.notes}"</div>` : '';
 
     let websiteBtn = '';
     if (company.website) {
         const url = company.website.startsWith('http') ? company.website : `https://${company.website}`;
-        websiteBtn = `
-            <a href="${url}" target="_blank" class="popup-cta-btn">
-                Visit Location Website
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="7" y1="17" x2="17" y2="7"></line>
-                    <polyline points="7 7 17 7 17 17"></polyline>
-                </svg>
-            </a>`;
+        websiteBtn = `<a href="${url}" target="_blank" class="popup-cta-btn">Visit Website</a>`;
     }
 
     const popupContent = `
         <div class="modern-popup">
-            <header class="popup-header">
-                <h3 class="popup-title">${name}</h3>
-                <div class="popup-tags">
-                    ${segment}
-                    ${siteType}
-                </div>
-            </header>
+            <header class="popup-header"><h3 class="popup-title">${name}</h3></header>
             <section class="popup-body">
                 <div class="metrics-grid">
                     <div class="metric-box">
-                        <span class="metric-val">${employees}</span>
-                        <span class="metric-lbl">Employees</span>
+                        <span class="metric-val">${workers}</span>
+                        <span class="metric-lbl">Workers</span>
                     </div>
                 </div>
                 <div class="popup-details-list">
@@ -864,12 +807,10 @@ function bindPopupToMarker(marker, company) {
                     ${phoneRow}
                     ${emailRow}
                 </div>
-                ${notesBlock}
             </section>
             ${websiteBtn}
         </div>
     `;
-
     marker.bindPopup(popupContent, { maxWidth: 300, minWidth: 260 });
 }
 
@@ -877,9 +818,9 @@ function bindPopupToMarker(marker, company) {
  * Handles map navigation and selections
  */
 function selectCompany(company) {
+    if (!company.latitude || !company.longitude) return;
     state.map.setView([company.latitude, company.longitude], 13);
     
-    // Auto-open dynamic popups for bubble/cluster modes
     setTimeout(() => {
         let activeMarkerTarget = null;
         const currentMode = state.prefs.mode;
@@ -913,8 +854,10 @@ function selectCompany(company) {
     highlightSidebarCard(company.company);
 
     if (window.innerWidth <= 768) {
-        document.getElementById('sidebar').classList.add('collapsed');
-        document.getElementById('sidebar-backdrop').classList.remove('active');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
         state.prefs.sidebarCollapsed = true;
         savePreferences();
     }
@@ -933,7 +876,7 @@ function highlightSidebarCard(companyId) {
 }
 
 /**
- * Computes, structures, and triggers a dynamic visible dataset CSV download
+ * Computes, structures, and triggers a dynamic visible dataset CSV download back to Excel format
  */
 function downloadVisibleCSV() {
     const bounds = state.map.getBounds();
@@ -947,17 +890,18 @@ function downloadVisibleCSV() {
         return;
     }
 
-    const headers = ['Company', 'Segment', 'Site Type', 'Employees', 'Address', 'Phone', 'Email', 'Website', 'Notes'];
+    const headers = ['Company', 'Website', 'Street Address (Germany)', 'Zip Code', 'City', 'Phone', 'Email', 'Workers', 'Longitude', 'Latitude'];
     const rows = visibleCompanies.map(c => [
         `"${(c.company || '').replace(/"/g, '""')}"`,
-        `"${(c.segment || '').replace(/"/g, '""')}"`,
-        `"${(c.siteType || '').replace(/"/g, '""')}"`,
-        `"${(c.employees || '0')}"`,
+        `"${(c.website || '').replace(/"/g, '""')}"`,
         `"${(c.address || '').replace(/"/g, '""')}"`,
+        `"${(c.zipCode || '').replace(/"/g, '""')}"`,
+        `"${(c.city || '').replace(/"/g, '""')}"`,
         `"${(c.phone || '').replace(/"/g, '""')}"`,
         `"${(c.email || '').replace(/"/g, '""')}"`,
-        `"${(c.website || '').replace(/"/g, '""')}"`,
-        `"${(c.notes || '').replace(/"/g, '""')}"`
+        `"${(c.workers || '0')}"`,
+        c.longitude || '',
+        c.latitude || ''
     ]);
 
     const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -973,21 +917,9 @@ function downloadVisibleCSV() {
 }
 
 /**
- * Updates color legends in floating overlays
+ * Handles cleaning out legacy segment indicators
  */
 function updateLegendUI() {
     const segmentsContainer = document.getElementById('legend-segments');
-    if (!segmentsContainer) return;
-    
-    segmentsContainer.innerHTML = '';
-    
-    Object.keys(state.segmentColors).sort().forEach(segment => {
-        const item = document.createElement('div');
-        item.className = 'legend-color-item';
-        item.innerHTML = `
-            <span class="legend-color-dot" style="background-color: ${state.segmentColors[segment]};"></span>
-            <span class="legend-color-label">${segment}</span>
-        `;
-        segmentsContainer.appendChild(item);
-    });
+    if (segmentsContainer) segmentsContainer.innerHTML = '';
 }
