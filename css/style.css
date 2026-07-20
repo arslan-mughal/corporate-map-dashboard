@@ -946,3 +946,195 @@ body.dark-theme .leaflet-tile-pane {
         page-break-after: always;
     }
 }
+
+/* ==========================================================================
+   Filter Panel Layout & Responsive Geolocation Dropdowns
+   ========================================================================== */
+
+.filter-panel {
+    background-color: var(--card-bg, #ffffff);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, background-color 0.3s ease;
+    border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    background-color: var(--panel-header-bg, #f8fafc);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.filter-header h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main, #0f172a);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.filter-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted, #64748b);
+    letter-spacing: 0.05em;
+}
+
+/* Two-column layout for City & Zip Code dropdowns */
+.filter-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.filter-group.half-width {
+    flex: 1;
+    min-width: 0; /* Prevents overflow inside narrow flexboxes */
+}
+
+/* Dropdowns, Text Inputs, and Select Elements Styling */
+.filter-panel input[type="text"],
+.filter-panel select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    border: 1px solid var(--input-border, #cbd5e1);
+    background-color: var(--input-bg, #ffffff);
+    color: var(--text-main, #0f172a);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none; /* Removes native OS styling for cleaner select arrows */
+}
+
+/* Custom dropdown arrow placement */
+.filter-group.half-width {
+    position: relative;
+}
+
+.filter-group.half-width::after {
+    content: "▼";
+    font-size: 0.65rem;
+    color: var(--text-muted, #64748b);
+    position: absolute;
+    right: 12px;
+    bottom: 13px;
+    pointer-events: none;
+}
+
+.filter-panel input[type="text"]:focus,
+.filter-panel select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Range Sliders */
+.filter-panel input[type="range"] {
+    width: 100%;
+    margin: 8px 0;
+    -webkit-appearance: none;
+    background: transparent;
+}
+
+.filter-panel input[type="range"]:focus {
+    outline: none;
+}
+
+.filter-panel input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: #2563eb;
+    border-radius: 3px;
+}
+
+.filter-panel input[type="range"]::-webkit-slider-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #2563eb;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+}
+
+.filter-panel input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+/* Clear Filters Button */
+.clear-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px;
+    background-color: var(--btn-secondary-bg, #f1f5f9);
+    color: var(--text-main, #0f172a);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.clear-btn:hover {
+    background-color: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+}
+
+/* Collapsed state adjustments */
+.filter-panel.collapsed .filter-body {
+    display: none;
+}
+
+.filter-panel.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.toggle-icon {
+    transition: transform 0.2s ease;
+    font-size: 0.75rem;
+    color: var(--text-muted, #64748b);
+}
+
+/* ==========================================================================
+   Dark Theme Overrides (Using Variable Fallbacks)
+   ========================================================================== */
+.dark-theme {
+    --card-bg: #1e293b;
+    --panel-header-bg: #0f172a;
+    --border-color: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --input-bg: #0f172a;
+    --input-border: #334155;
+    --btn-secondary-bg: #334155;
+}
