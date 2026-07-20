@@ -226,75 +226,56 @@
             </div>
 
             <!-- Floating Filter Panel -->
-            <div id="filter-panel" class="filter-panel collapsed">
-                <button id="filter-toggle" class="filter-toggle">
-                    <span class="toggle-left">
-                        <svg class="filter-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                        <span>Filter Locations</span>
-                    </span>
-                    <svg class="filter-chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                </button>
-
-                <div class="filter-content">
-                    <!-- Text Search -->
-                    <div class="filter-group">
-                        <label for="search-input">Search Company</label>
-                        <div class="input-with-icon">
-                            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                            <input type="text" id="search-input" placeholder="Type name, city, notes...">
-                        </div>
-                    </div>
-
-                    <!-- Dropdowns Row -->
-                    <div class="filter-row-half">
-                        <div class="filter-group">
-                            <label for="segment-select">Segment</label>
-                            <select id="segment-select">
-                                <option value="">All Segments</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="sitetype-select">Site Type</label>
-                            <select id="sitetype-select">
-                                <option value="">All Types</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Sliders for Ranges -->
-                    <div class="filter-group">
-                        <div class="slider-header">
-                            <label for="min-employees">Min Employees</label>
-                            <span id="min-emp-display" class="slider-badge">0</span>
-                        </div>
-                        <input type="range" id="min-employees" min="0" max="5000" step="50" value="0">
-                    </div>
-
-                    <div class="filter-group">
-                        <div class="slider-header">
-                            <label for="max-employees">Max Employees</label>
-                            <span id="max-emp-display" class="slider-badge">5,000+</span>
-                        </div>
-                        <input type="range" id="max-employees" min="0" max="5000" step="50" value="5000">
-                    </div>
-
-                    <!-- Reset CTA Button -->
-                    <button id="reset-filters-btn" class="reset-btn">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
-                            <path d="M22 11.5A10 10 0 0 0 3.2 7.2M2 12.5a10 10 0 0 0 18.8 4.3"></path>
-                        </svg>
-                        Clear Active Filters
-                    </button>
-                </div>
+            <div id="filter-panel" class="filter-panel">
+    <div class="filter-header" id="filter-toggle">
+        <h3><i class="fas fa-filter"></i> Filter Locations</h3>
+        <span class="toggle-icon">▼</span>
+    </div>
+    
+    <div class="filter-body">
+        <!-- Text Search -->
+        <div class="filter-group">
+            <label for="search-input">SEARCH COMPANY</label>
+            <div class="input-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search-input" placeholder="Type name, address...">
             </div>
+        </div>
+
+        <!-- Geographic Dropdowns Row -->
+        <div class="filter-row">
+            <div class="filter-group half-width">
+                <label for="city-select">CITY</label>
+                <select id="city-select">
+                    <option value="">All Cities</option>
+                </select>
+            </div>
+            
+            <div class="filter-group half-width">
+                <label for="zip-select">ZIP CODE</label>
+                <select id="zip-select">
+                    <option value="">All Zip Codes</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Worker Ranges Sliders -->
+        <div class="filter-group">
+            <label>MIN WORKERS (<span id="min-work-display">0</span>)</label>
+            <input type="range" id="min-workers" min="0" max="5000" value="0">
+        </div>
+
+        <div class="filter-group">
+            <label>MAX WORKERS (<span id="max-work-display">5000+</span>)</label>
+            <input type="range" id="max-workers" min="0" max="5000" value="5000">
+        </div>
+
+        <!-- Reset Button -->
+        <button id="reset-filters-btn" class="clear-btn">
+            <i class="fas fa-sync-alt"></i> Clear Active Filters
+        </button>
+    </div>
+</div>
             
             <!-- Interactive Collapsible Legend Map Overlay -->
             <div id="map-legend" class="map-legend collapsed">
